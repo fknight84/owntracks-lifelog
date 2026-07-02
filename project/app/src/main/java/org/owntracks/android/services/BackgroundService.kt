@@ -631,7 +631,8 @@ class BackgroundService : LifecycleService(), Preferences.OnPreferenceChangeList
             Preferences::moveModeLocatorInterval.name,
             Preferences::pegLocatorFastestIntervalToInterval.name,
             Preferences::notificationHigherPriority.name,
-            Preferences::locatorPriority.name)
+            Preferences::locatorPriority.name,
+            Preferences::useGNSSInSignificantMonitoringMode.name)
     if (propertiesWeCareAbout
         .stream()
         .filter { o: String -> properties.contains(o) }
