@@ -22,6 +22,9 @@ interface DefaultsProvider {
               .lowercase(Locale.getDefault())
       Preferences::connectionTimeoutSeconds -> 30
       Preferences::debugLog -> false
+      Preferences::lifelogKnownWifis ->
+          """[{"ssid":"knights5G","lat":35.86407,"lon":128.54661,"label":"집"},{"ssid":"knights","lat":35.86407,"lon":128.54661,"label":"집"},{"ssid":"KT_GiGA_5G_48F5","lat":35.89432,"lon":128.56335,"label":"직장"}]"""
+      Preferences::lifelogPresenceIntervalMinutes -> 10
       Preferences::deviceId ->
           Build.DEVICE?.replace(" ", "-")
               ?.replace("[^a-zA-Z0-9]+".toRegex(), "")

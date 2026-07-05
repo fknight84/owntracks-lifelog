@@ -571,8 +571,8 @@ class BackgroundService : LifecycleService(), Preferences.OnPreferenceChangeList
 
   private fun startPresencePinger(wifi: KnownWifi) {
     if (presenceJob?.isActive == true) return
-    Timber.i(
-        "LIFELOG: start presence pinger ${wifi.ssid} every ${LifelogConfig.presenceIntervalMinutes}min")
+    val intervalMin = preferences.lifelogPresenceIntervalMinutes.toLong().coerceAtLeast(1L)
+    Timber.i("LIFELOG: start presence pinger ${wifi.ssid} every ${intervalMin}min")
     presenceJob =
         lifecycleScope.launch {
           while (isActive) {
@@ -585,7 +585,7 @@ class BackgroundService : LifecycleService(), Preferences.OnPreferenceChangeList
                   elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
                 }
             locationProcessor.onLocationChanged(loc, MessageLocation.ReportType.DEFAULT)
-            delay(LifelogConfig.presenceIntervalMinutes * 60_000L)
+            delay(intervalMin * 60_000L)
           }
         }
   }
@@ -603,7 +603,8 @@ class BackgroundService : LifecycleService(), Preferences.OnPreferenceChangeList
     Timber.v("setupLocationRequest")
     if (requirementsChecker.hasLocationPermissions()) {
       // LIFELOG: 지정 WiFi 접속 시 GPS 정지 + 고정좌표 존재 핑
-      val knownWifi = LifelogConfig.match(wifiInfoProvider.getSSID())
+      val knownWifi =
+          LifelogConfig.match(preferences.lifelogKnownWifis, wifiInfoProvider.getSSID())
       if (knownWifi != null) {
         Timber.i(
             "LIFELOG: on known wifi '${knownWifi.ssid}' (${knownWifi.label}) -> GPS off, presence mode")

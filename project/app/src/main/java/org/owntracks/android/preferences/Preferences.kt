@@ -233,6 +233,11 @@ constructor(
 
   @Preference var deviceId: String by preferencesStore
 
+  // LIFELOG: 지정 WiFi 목록(JSON) + 존재기록 주기(분). Editor에서 편집 가능.
+  @Preference var lifelogKnownWifis: String by preferencesStore
+
+  @Preference var lifelogPresenceIntervalMinutes: Int by preferencesStore
+
   // Number of seconds that must have elapsed since the last GPS location before we accept a network
   // location
   @Preference var discardNetworkLocationThresholdSeconds: Int by preferencesStore

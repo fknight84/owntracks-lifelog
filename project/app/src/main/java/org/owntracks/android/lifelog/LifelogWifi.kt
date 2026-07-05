@@ -1,29 +1,52 @@
 package org.owntracks.android.lifelog
 
+import org.json.JSONArray
+import timber.log.Timber
+
 /** 지정 WiFi 한 곳 = SSID + 그 위치의 고정 좌표 + 표시 이름. */
 data class KnownWifi(
     val ssid: String,
     val lat: Double,
     val lon: Double,
-    val label: String,
+    val label: String = "",
 )
 
 /**
- * Lifelog 설정. 지정 WiFi에 접속하면 GPS를 끄고, 아래 고정 좌표로
- * presenceIntervalMinutes 마다 "존재" 위치를 발행한다.
+ * Lifelog 설정 파서. 지정 WiFi 목록은 preference(JSON 문자열)로 저장되며,
+ * 앱 내 설정 편집기(Editor)에서 리빌드 없이 수정할 수 있다.
  *
- * 새 WiFi를 추가하려면 knownWifis 목록에 항목을 넣고 다시 빌드하면 된다.
+ * JSON 형식:
+ * [{"ssid":"knights5G","lat":35.86407,"lon":128.54661,"label":"집"}, ...]
  */
 object LifelogConfig {
-  val knownWifis =
+  /** preference가 비었거나 파싱 실패 시 폴백. */
+  val defaults =
       listOf(
           KnownWifi("knights5G", 35.86407, 128.54661, "집"),
           KnownWifi("knights", 35.86407, 128.54661, "집"),
           KnownWifi("KT_GiGA_5G_48F5", 35.89432, 128.56335, "직장"),
       )
 
-  const val presenceIntervalMinutes: Long = 10L
+  fun parse(jsonStr: String?): List<KnownWifi> {
+    if (jsonStr.isNullOrBlank()) return defaults
+    return try {
+      val arr = JSONArray(jsonStr)
+      (0 until arr.length())
+          .map { i ->
+            val o = arr.getJSONObject(i)
+            KnownWifi(
+                o.getString("ssid"),
+                o.getDouble("lat"),
+                o.getDouble("lon"),
+                o.optString("label", ""))
+          }
+          .ifEmpty { defaults }
+    } catch (e: Exception) {
+      Timber.w(e, "LIFELOG: failed to parse knownWifis JSON, using defaults")
+      defaults
+    }
+  }
 
-  fun match(ssid: String?): KnownWifi? =
-      ssid?.let { s -> knownWifis.firstOrNull { it.ssid == s } }
+  fun match(jsonStr: String?, ssid: String?): KnownWifi? =
+      ssid?.let { s -> parse(jsonStr).firstOrNull { it.ssid == s } }
 }
