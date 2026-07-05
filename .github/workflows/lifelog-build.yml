@@ -17,11 +17,18 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      - name: Build GMS debug APK (Google Maps)
+      - name: Decode signing keystore
+        run: echo "${{ secrets.LIFELOG_KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/lifelog.keystore"
+
+      - name: Build GMS debug APK (Google Maps, fixed signing)
         working-directory: project
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dfile.encoding=UTF-8"
           GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+          LIFELOG_KEYSTORE_FILE: ${{ runner.temp }}/lifelog.keystore
+          LIFELOG_KEYSTORE_PASSWORD: ${{ secrets.LIFELOG_KEYSTORE_PASSWORD }}
+          LIFELOG_KEY_ALIAS: ${{ secrets.LIFELOG_KEY_ALIAS }}
+          LIFELOG_KEY_PASSWORD: ${{ secrets.LIFELOG_KEY_PASSWORD }}
         run: |
           chmod +x ./gradlew
           ./gradlew :app:assembleGmsDebug --no-daemon --stacktrace
