@@ -90,14 +90,12 @@ android {
         enableV3Signing = true
         enableV4Signing = true
       }
-      register("lifelog") {
+      getByName("debug") {
         System.getenv("LIFELOG_KEYSTORE_FILE")?.let { ksPath ->
-          keyAlias = System.getenv("LIFELOG_KEY_ALIAS")
-          keyPassword = System.getenv("LIFELOG_KEY_PASSWORD")
           storeFile = file(ksPath)
           storePassword = System.getenv("LIFELOG_KEYSTORE_PASSWORD")
-          enableV1Signing = true
-          enableV2Signing = true
+          keyAlias = System.getenv("LIFELOG_KEY_ALIAS")
+          keyPassword = System.getenv("LIFELOG_KEY_PASSWORD")
         }
       }
     }
@@ -129,9 +127,6 @@ android {
       )
       resValue("string", "GOOGLE_MAPS_API_KEY", googleMapsAPIKey)
       applicationIdSuffix = ".debug"
-      System.getenv("LIFELOG_KEYSTORE_FILE")?.let {
-        signingConfig = signingConfigs.findByName("lifelog")
-      }
       enableUnitTestCoverage = true
       enableAndroidTestCoverage = true
     }
