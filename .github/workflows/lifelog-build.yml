@@ -17,17 +17,18 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      - name: Build OSS debug APK
+      - name: Build GMS debug APK (Google Maps)
         working-directory: project
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dfile.encoding=UTF-8"
+          GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
         run: |
           chmod +x ./gradlew
-          ./gradlew :app:assembleOssDebug --no-daemon --stacktrace
+          ./gradlew :app:assembleGmsDebug --no-daemon --stacktrace
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: owntracks-oss-debug
-          path: project/app/build/outputs/apk/oss/debug/*.apk
+          name: owntracks-gms-debug
+          path: project/app/build/outputs/apk/gms/debug/*.apk
           if-no-files-found: error
