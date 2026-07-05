@@ -571,7 +571,8 @@ class BackgroundService : LifecycleService(), Preferences.OnPreferenceChangeList
 
   private fun startPresencePinger(wifi: KnownWifi) {
     if (presenceJob?.isActive == true) return
-    val intervalMin = preferences.lifelogPresenceIntervalMinutes.toLong().coerceAtLeast(1L)
+    val intervalMin =
+        (preferences.lifelogPresenceIntervalMinutes.toLongOrNull() ?: 10L).coerceAtLeast(1L)
     Timber.i("LIFELOG: start presence pinger ${wifi.ssid} every ${intervalMin}min")
     presenceJob =
         lifecycleScope.launch {
