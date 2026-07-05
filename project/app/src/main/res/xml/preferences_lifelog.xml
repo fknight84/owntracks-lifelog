@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:title="Lifelog">
+
+    <androidx.preference.PreferenceCategory
+        app:iconSpaceReserved="false"
+        app:title="존재 모드">
+        <androidx.preference.EditTextPreference
+            app:iconSpaceReserved="false"
+            app:key="lifelogPresenceIntervalMinutes"
+            app:title="존재기록 주기 (분)"
+            app:useSimpleSummaryProvider="true" />
+    </androidx.preference.PreferenceCategory>
+
+    <androidx.preference.PreferenceCategory
+        app:iconSpaceReserved="false"
+        app:title="지정 WiFi (접속 시 GPS 정지 + 존재기록)">
+        <androidx.preference.Preference
+            app:iconSpaceReserved="false"
+            app:key="lifelogAddCurrentWifi"
+            app:summary="지금 연결된 WiFi와 현재 위치를 목록에 추가합니다"
+            app:title="현재 WiFi를 이 장소로 추가" />
+        <androidx.preference.EditTextPreference
+            app:iconSpaceReserved="false"
+            app:key="lifelogKnownWifis"
+            app:title="목록 직접 편집 (JSON)" />
+    </androidx.preference.PreferenceCategory>
+</PreferenceScreen>

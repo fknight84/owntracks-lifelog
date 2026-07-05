@@ -48,6 +48,11 @@
         app:fragment="org.owntracks.android.ui.preferences.ExperimentalFragment"
         app:icon="@drawable/science_24" />
     <Preference
+        android:key="lifelogScreen"
+        android:title="Lifelog"
+        app:fragment="org.owntracks.android.ui.preferences.LifelogFragment"
+        app:icon="@drawable/ic_baseline_map_24" />
+    <Preference
         android:key="configuration"
         android:title="@string/configurationManagement"
         app:icon="@drawable/ic_baseline_import_export_24" />

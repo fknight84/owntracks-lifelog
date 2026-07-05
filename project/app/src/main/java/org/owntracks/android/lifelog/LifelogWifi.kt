@@ -1,6 +1,7 @@
 package org.owntracks.android.lifelog
 
 import org.json.JSONArray
+import org.json.JSONObject
 import timber.log.Timber
 
 /** 지정 WiFi 한 곳 = SSID + 그 위치의 고정 좌표 + 표시 이름. */
@@ -49,4 +50,17 @@ object LifelogConfig {
 
   fun match(jsonStr: String?, ssid: String?): KnownWifi? =
       ssid?.let { s -> parse(jsonStr).firstOrNull { it.ssid == s } }
+
+  fun toJson(list: List<KnownWifi>): String {
+    val arr = JSONArray()
+    list.forEach { w ->
+      arr.put(
+          JSONObject()
+              .put("ssid", w.ssid)
+              .put("lat", w.lat)
+              .put("lon", w.lon)
+              .put("label", w.label))
+    }
+    return arr.toString()
+  }
 }
