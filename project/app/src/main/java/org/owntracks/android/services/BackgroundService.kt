@@ -43,6 +43,17 @@ import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.os.SystemClock
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import org.owntracks.android.lifelog.KnownWifi
+import org.owntracks.android.lifelog.LifelogConfig
+import org.owntracks.android.net.WifiInfoProvider
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import org.owntracks.android.BaseApp.Companion.NOTIFICATION_CHANNEL_EVENTS
 import org.owntracks.android.BaseApp.Companion.NOTIFICATION_GROUP_EVENTS
@@ -113,6 +124,8 @@ class BackgroundService : LifecycleService(), Preferences.OnPreferenceChangeList
 
   @Inject lateinit var locationProviderClient: LocationProviderClient
 
+  @Inject lateinit var wifiInfoProvider: WifiInfoProvider
+
   @Inject lateinit var requirementsChecker: RequirementsChecker
 
   @Inject
@@ -154,6 +167,11 @@ class BackgroundService : LifecycleService(), Preferences.OnPreferenceChangeList
 
   override fun onCreate() {
     Timber.v("Backgroundservice onCreate")
+    try {
+      connectivityManagerForLifelog.registerDefaultNetworkCallback(lifelogNetworkCallback)
+    } catch (e: Exception) {
+      Timber.w(e, "LIFELOG: failed to register network callback")
+    }
     val entrypoint = EntryPoints.get(applicationContext, ServiceEntrypoint::class.java)
     preferences = entrypoint.preferences()
     endpointStateRepo = entrypoint.endpointStateRepo()
@@ -244,6 +262,13 @@ class BackgroundService : LifecycleService(), Preferences.OnPreferenceChangeList
 
   override fun onDestroy() {
     Timber.v("Backgroundservice onDestroy")
+    try {
+      connectivityManagerForLifelog.unregisterNetworkCallback(lifelogNetworkCallback)
+    } catch (e: Exception) {
+      Timber.w(e, "LIFELOG: failed to unregister network callback")
+    }
+    presenceJob?.cancel()
+    reevalJob?.cancel()
     stopForeground(STOP_FOREGROUND_REMOVE)
     unregisterReceiver(powerBroadcastReceiver)
     significantMotionSensor.cancel()
@@ -518,9 +543,77 @@ class BackgroundService : LifecycleService(), Preferences.OnPreferenceChangeList
     }
   }
 
+  // ===== LIFELOG additions: WiFi 기반 존재 모드 =====
+  private var presenceJob: Job? = null
+  private var reevalJob: Job? = null
+  private val connectivityManagerForLifelog by lazy {
+    getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+  }
+  private val lifelogNetworkCallback =
+      object : ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: Network) = scheduleLifelogReevaluate()
+
+        override fun onLost(network: Network) = scheduleLifelogReevaluate()
+
+        override fun onCapabilitiesChanged(
+            network: Network,
+            networkCapabilities: NetworkCapabilities
+        ) = scheduleLifelogReevaluate()
+      }
+
+  private fun scheduleLifelogReevaluate() {
+    reevalJob?.cancel()
+    reevalJob =
+        lifecycleScope.launch {
+          delay(3000)
+          setupLocationRequest()
+        }
+  }
+
+  private fun startPresencePinger(wifi: KnownWifi) {
+    if (presenceJob?.isActive == true) return
+    Timber.i(
+        "LIFELOG: start presence pinger ${wifi.ssid} every ${LifelogConfig.presenceIntervalMinutes}min")
+    presenceJob =
+        lifecycleScope.launch {
+          while (isActive) {
+            val loc =
+                Location("wifi").apply {
+                  latitude = wifi.lat
+                  longitude = wifi.lon
+                  accuracy = 25f
+                  time = System.currentTimeMillis()
+                  elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
+                }
+            locationProcessor.onLocationChanged(loc, MessageLocation.ReportType.DEFAULT)
+            delay(LifelogConfig.presenceIntervalMinutes * 60_000L)
+          }
+        }
+  }
+
+  private fun stopPresencePinger() {
+    presenceJob?.let {
+      Timber.i("LIFELOG: stop presence pinger")
+      it.cancel()
+      presenceJob = null
+    }
+  }
+  // ===== end LIFELOG additions =====
+
   private fun setupLocationRequest(): Result<Unit> {
     Timber.v("setupLocationRequest")
     if (requirementsChecker.hasLocationPermissions()) {
+      // LIFELOG: 지정 WiFi 접속 시 GPS 정지 + 고정좌표 존재 핑
+      val knownWifi = LifelogConfig.match(wifiInfoProvider.getSSID())
+      if (knownWifi != null) {
+        Timber.i(
+            "LIFELOG: on known wifi '${knownWifi.ssid}' (${knownWifi.label}) -> GPS off, presence mode")
+        locationProviderClient.removeLocationUpdates(
+            callbackForReportType[MessageLocation.ReportType.DEFAULT]!!.value)
+        startPresencePinger(knownWifi)
+        return Result.success(Unit)
+      }
+      stopPresencePinger()
       val monitoring = preferences.monitoring
       var interval: Duration? = null
       var smallestDisplacement: Float? = null
