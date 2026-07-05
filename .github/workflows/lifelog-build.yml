@@ -1,0 +1,33 @@
+name: Build Lifelog APK
+
+on:
+  push:
+    branches: [ master, lifelog ]
+    paths-ignore: [ '**.md' ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Build OSS debug APK
+        working-directory: project
+        env:
+          GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dfile.encoding=UTF-8"
+        run: |
+          chmod +x ./gradlew
+          ./gradlew :app:assembleOssDebug --no-daemon --stacktrace
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: owntracks-oss-debug
+          path: project/app/build/outputs/apk/oss/debug/*.apk
+          if-no-files-found: error
