@@ -49,7 +49,7 @@
         app:icon="@drawable/science_24" />
     <Preference
         android:key="lifelogScreen"
-        android:title="Lifelog"
+        android:title="wifi설정"
         app:fragment="org.owntracks.android.ui.preferences.LifelogFragment"
         app:icon="@drawable/ic_baseline_map_24" />
     <Preference
