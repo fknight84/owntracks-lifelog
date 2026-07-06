@@ -8,7 +8,7 @@
         app:title="존재 모드">
         <androidx.preference.EditTextPreference
             app:iconSpaceReserved="false"
-            app:key="lifelogPresenceIntervalMinutes"
+            app:key="lifelogPresenceMinutes"
             app:title="존재기록 주기 (분)"
             app:useSimpleSummaryProvider="true" />
     </androidx.preference.PreferenceCategory>

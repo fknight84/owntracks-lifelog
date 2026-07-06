@@ -236,7 +236,7 @@ constructor(
   // LIFELOG: 지정 WiFi 목록(JSON) + 존재기록 주기(분). Editor에서 편집 가능.
   @Preference var lifelogKnownWifis: String by preferencesStore
 
-  @Preference var lifelogPresenceIntervalMinutes: String by preferencesStore
+  @Preference var lifelogPresenceMinutes: String by preferencesStore
 
   // Number of seconds that must have elapsed since the last GPS location before we accept a network
   // location
