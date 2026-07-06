@@ -23,7 +23,7 @@ interface DefaultsProvider {
       Preferences::connectionTimeoutSeconds -> 30
       Preferences::debugLog -> false
       Preferences::lifelogKnownWifis ->
-          """[{"ssid":"knights5G","lat":35.86407,"lon":128.54661,"label":"집"},{"ssid":"knights","lat":35.86407,"lon":128.54661,"label":"집"},{"ssid":"KT_GiGA_5G_48F5","lat":35.89432,"lon":128.56335,"label":"직장"}]"""
+          """[{"ssid":"knightHome5G","lat":35.863823,"lon":128.546645,"label":"엑소텍 대구지사"},{"ssid":"knights5G","lat":35.86407,"lon":128.54661,"label":"평리동 본가"},{"ssid":"KT_GiGA_5G_48F5","lat":35.89432,"lon":128.56335,"label":"엑소텍 대구지사"}]"""
       Preferences::lifelogPresenceMinutes -> "10"
       Preferences::deviceId ->
           Build.DEVICE?.replace(" ", "-")

@@ -23,9 +23,9 @@ object LifelogConfig {
   /** preference가 비었거나 파싱 실패 시 폴백. */
   val defaults =
       listOf(
-          KnownWifi("knights5G", 35.86407, 128.54661, "집"),
-          KnownWifi("knights", 35.86407, 128.54661, "집"),
-          KnownWifi("KT_GiGA_5G_48F5", 35.89432, 128.56335, "직장"),
+          KnownWifi("knightHome5G", 35.863823, 128.546645, "엑소텍 대구지사"),
+          KnownWifi("knights5G", 35.86407, 128.54661, "평리동 본가"),
+          KnownWifi("KT_GiGA_5G_48F5", 35.89432, 128.56335, "엑소텍 대구지사"),
       )
 
   fun parse(jsonStr: String?): List<KnownWifi> {
