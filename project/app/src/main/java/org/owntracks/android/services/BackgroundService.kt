@@ -171,6 +171,14 @@ class BackgroundService : LifecycleService(), Preferences.OnPreferenceChangeList
     } catch (e: Exception) {
       Timber.w(e, "LIFELOG: failed to register network callback")
     }
+    // 안전장치: WiFi 변화 콜백을 놓쳐도 주기적으로 SSID 재확인해 존재모드 진입
+    periodicReevalJob =
+        lifecycleScope.launch {
+          while (isActive) {
+            delay(120_000)
+            setupLocationRequest()
+          }
+        }
     val entrypoint = EntryPoints.get(applicationContext, ServiceEntrypoint::class.java)
     preferences = entrypoint.preferences()
     endpointStateRepo = entrypoint.endpointStateRepo()
@@ -268,6 +276,7 @@ class BackgroundService : LifecycleService(), Preferences.OnPreferenceChangeList
     }
     presenceJob?.cancel()
     reevalJob?.cancel()
+    periodicReevalJob?.cancel()
     stopForeground(STOP_FOREGROUND_REMOVE)
     unregisterReceiver(powerBroadcastReceiver)
     significantMotionSensor.cancel()
@@ -545,6 +554,7 @@ class BackgroundService : LifecycleService(), Preferences.OnPreferenceChangeList
   // ===== LIFELOG additions: WiFi 기반 존재 모드 =====
   private var presenceJob: Job? = null
   private var reevalJob: Job? = null
+  private var periodicReevalJob: Job? = null
   private val connectivityManagerForLifelog by lazy {
     getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
   }
@@ -604,11 +614,12 @@ class BackgroundService : LifecycleService(), Preferences.OnPreferenceChangeList
     Timber.v("setupLocationRequest")
     if (requirementsChecker.hasLocationPermissions()) {
       // LIFELOG: 지정 WiFi 접속 시 GPS 정지 + 고정좌표 존재 핑
-      val knownWifi =
-          LifelogConfig.match(preferences.lifelogKnownWifis, wifiInfoProvider.getSSID())
+      val currentSsid = wifiInfoProvider.getSSID()
+      val knownWifi = LifelogConfig.match(preferences.lifelogKnownWifis, currentSsid)
+      Timber.i(
+          "LIFELOG: setupLocationRequest ssid='$currentSsid' matched='${knownWifi?.label ?: "none"}'")
       if (knownWifi != null) {
-        Timber.i(
-            "LIFELOG: on known wifi '${knownWifi.ssid}' (${knownWifi.label}) -> GPS off, presence mode")
+        Timber.i("LIFELOG: presence mode '${knownWifi.ssid}' -> GPS off")
         locationProviderClient.removeLocationUpdates(
             callbackForReportType[MessageLocation.ReportType.DEFAULT]!!.value)
         startPresencePinger(knownWifi)

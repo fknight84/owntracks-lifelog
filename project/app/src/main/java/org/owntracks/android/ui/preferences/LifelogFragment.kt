@@ -32,6 +32,15 @@ class LifelogFragment : AbstractPreferenceFragment() {
       true
     }
     updateListSummary()
+    updateStatus()
+  }
+
+  private fun updateStatus() {
+    val ssid = wifiInfoProvider.getSSID()
+    val match = LifelogConfig.match(preferences.lifelogKnownWifis, ssid)
+    findPreference<Preference>("lifelogStatus")?.summary =
+        "감지 WiFi: ${ssid ?: "(없음/못읽음)"}\n" +
+            "매칭: ${if (match != null) "${match.label} → GPS 꺼짐(존재모드)" else "매칭 안됨 → GPS 켜짐"}"
   }
 
   private fun toast(msg: String) = Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()

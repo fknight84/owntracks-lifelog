@@ -6,6 +6,11 @@
     <androidx.preference.PreferenceCategory
         app:iconSpaceReserved="false"
         app:title="존재 모드">
+        <androidx.preference.Preference
+            app:iconSpaceReserved="false"
+            app:key="lifelogStatus"
+            app:selectable="false"
+            app:title="현재 감지 상태" />
         <androidx.preference.EditTextPreference
             app:iconSpaceReserved="false"
             app:key="lifelogPresenceMinutes"
