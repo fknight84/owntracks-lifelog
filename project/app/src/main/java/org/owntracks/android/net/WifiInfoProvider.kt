@@ -53,12 +53,15 @@ class WifiInfoProvider @Inject constructor(@ApplicationContext context: Context)
         bssid
       }
 
-  fun getSSID(): String? =
-      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-        @Suppress("DEPRECATION") wifiManager.connectionInfo.getUnquotedSSID()
-      } else {
-        ssid
-      }
+  fun getSSID(): String? {
+    // LIFELOG: 콜백 캐시(ssid)는 기본 네트워크가 모바일로 바뀌면 null로 뒤집힌다
+    // (삼성폰은 WiFi+모바일 동시 활성이 흔함). 실제 WiFi 연결을 직접 읽어
+    // (위치권한+위치서비스 필요) 안정적으로 SSID를 얻고, 캐시는 폴백으로 둔다.
+    @Suppress("DEPRECATION")
+    val direct = wifiManager.connectionInfo?.getUnquotedSSID()
+    if (!direct.isNullOrBlank() && direct != WifiManager.UNKNOWN_SSID) return direct
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) ssid else direct
+  }
 
   fun isConnected(): Boolean = getBSSID() != null
 
